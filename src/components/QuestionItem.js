@@ -1,8 +1,40 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-function QuestionItem({ question }) {
+function QuestionItem({ question, onDelete, onChangeAnswer }) {
   const { id, prompt, answers, correctIndex } = question;
+  const [rightAnswer, setRightAnswer] = useState(correctIndex);
 
+  //function to handle delete of a question
+  function handleDelete(){
+    console.log(question);
+    // deleting the question on the database
+    
+    fetch(` http://localhost:4000/questions/${question.id}`, {
+      method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(() => onDelete(question))
+    .catch(err => console.log(err))
+  }
+
+  // creating a function to allow changing answer
+  useEffect(() => {
+    
+    fetch(`http://localhost:4000/questions/${question.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        correctIndex: rightAnswer
+      })
+    })
+    .then(res => res.json())
+    .then(() => onChangeAnswer(question))
+    .catch(err => console.log(err))
+  }, [rightAnswer])
+  
   const options = answers.map((answer, index) => (
     <option key={index} value={index}>
       {answer}
@@ -15,9 +47,9 @@ function QuestionItem({ question }) {
       <h5>Prompt: {prompt}</h5>
       <label>
         Correct Answer:
-        <select defaultValue={correctIndex}>{options}</select>
+        <select defaultValue={correctIndex} onChange={(e) => setRightAnswer(e.target.value)} value={rightAnswer}>{options}</select>
       </label>
-      <button>Delete Question</button>
+      <button onClick={handleDelete}>Delete Question</button>
     </li>
   );
 }
